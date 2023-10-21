@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require("cors")
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -36,8 +36,25 @@ async function run() {
 
     const productCollection = client.db("productDB").collection("product")
 
+    
+
+    // get data from database
+    app.get("/product", async(req, res) =>{
+        const cursor = productCollection.find();
+        const result = await cursor.toArray();
+        res.send(result)
+    })
+
+    // get one data from database
+    app.get("/product/:id", async(req, res) =>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)}
+        const result = await productCollection.findOne(query)
+        res.send(result)
+    })
+
     // send data to the database
-    app.post('/product', async(req, res) =>{
+    app.post("/product", async(req, res) =>{
         const newProduct = req.body;
         console.log(newProduct)
         // database e send
@@ -45,10 +62,23 @@ async function run() {
         res.send(result)
     })
 
-    // get data from database
-    app.get("/product", async(req, res) =>{
-        const cursor = productCollection.find();
-        const result = await cursor.toArray();
+    // update data from client side
+    app.put("/product/:id", async(req, res) =>{
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)}
+        const options = {upsert : true};
+        const updatedProduct = req.body;
+        const product ={
+            $set:{
+                name: updatedProduct.name, 
+                brandName: updatedProduct.brandName, 
+                type: updatedProduct.type, 
+                rating: updatedProduct.rating, 
+                price: updatedProduct.price, 
+                photo: updatedProduct.photo
+            }
+        }
+        const result = await productCollection.updateOne(filter, product, options);
         res.send(result)
     })
 
