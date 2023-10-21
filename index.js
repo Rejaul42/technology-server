@@ -88,7 +88,11 @@ async function run() {
 
 
     // get cart data from database
-    
+    app.get("/cart", async(req, res) =>{
+        const cursor = cartCollection.find();
+        const result = await cursor.toArray();
+        res.send(result)
+    })
 
     // post cart data 
     app.post("/cart", async(req, res) =>{
